@@ -1,0 +1,37 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('1. Clonar Repositorio UPI') {
+            steps {
+                echo '📥 Conectando con GitHub y descargando el repositorio...'
+                // Descarga explícitamente tu repositorio de la UPI
+                git url: 'https://github.com/josjavmatgue/paginaUPI.git', branch: 'main'
+            }
+        }
+
+        stage('2. Limpiar Contenedores Previos') {
+            steps {
+                echo '🗑️ Deteniendo versiones antiguas en el servidor Host...'
+                // Apaga el contenedor anterior para evitar que el puerto 8080 esté ocupado
+                sh 'docker-compose down --remove-orphans'
+            }
+        }
+
+        stage('3. Desplegar en Producción con Docker') {
+            steps {
+                echo '🚀 Levantando el servidor web Nginx mediante Docker Compose...'
+                // Levanta el entorno en segundo plano (-d) reconstruyendo si hay cambios
+                sh 'docker-compose up -d --build'
+            }
+        }
+
+        stage('4. Verificación del Sitio UPI') {
+            steps {
+                echo '✅ Validando que la página responda correctamente en el puerto 8080...'
+                sleep 3
+                // Hace una petición de prueba para confirmar el estado 200 OK en el host
+                sh 'curl -I http://localhost:8080'
+            }
+        }
+    }
